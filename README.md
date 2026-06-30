@@ -98,6 +98,28 @@ Brief：
 - 平台合规检查
 - 给达人的沟通要点
 
+## 让 agent 自动安装
+
+把下面这段发给 Codex、Claude Code 或其他支持 skills 的 agent：
+
+```text
+请帮我安装这个 skill：
+https://github.com/vansvoler/kol-content-review-skill
+
+要求：
+1. 先 clone 仓库，不要只复制单个 SKILL.md。
+2. 运行 bash scripts/setup.sh --target codex --no-system-tools 完成安装。
+3. 不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
+4. 告诉我当前环境是否具备 PDF、PPT、老 Office 文件或 OCR 处理能力；如果缺少可选工具，只说明影响。
+5. 安装后告诉我目标路径，并提醒我重启 agent 以加载新 skill。
+```
+
+如果 agent 已经知道当前环境，也可以用更短的说法：
+
+```text
+安装 vansvoler/kol-content-review-skill 这个 skill。请 clone 仓库，然后运行 scripts/setup.sh 安装到当前 agent 的 skills 目录。不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
+```
+
 ## 环境检查
 
 `scripts/validate.sh` 会检查必需运行环境，并报告可选文件处理工具是否存在。它不会自动安装系统工具。
@@ -133,26 +155,4 @@ Brief：
     ├── parse_draft.py
     ├── setup.sh
     └── validate.sh
-```
-
-## 让 agent 自动安装
-
-把下面这段发给 Codex、Claude Code 或其他支持 skills 的 agent：
-
-```text
-请帮我安装这个 skill：
-https://github.com/vansvoler/kol-content-review-skill
-
-要求：
-1. 先 clone 仓库，不要只复制单个 SKILL.md。
-2. 运行 bash scripts/setup.sh --target codex --no-system-tools 完成安装。
-3. 不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
-4. 告诉我当前环境是否具备 PDF、PPT、老 Office 文件或 OCR 处理能力；如果缺少可选工具，只说明影响。
-5. 安装后告诉我目标路径，并提醒我重启 agent 以加载新 skill。
-```
-
-如果 agent 已经知道当前环境，也可以用更短的说法：
-
-```text
-安装 vansvoler/kol-content-review-skill 这个 skill。请 clone 仓库，然后运行 scripts/setup.sh 安装到当前 agent 的 skills 目录。不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
 ```
