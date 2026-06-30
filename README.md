@@ -38,9 +38,10 @@ https://github.com/vansvoler/kol-content-review-skill
 
 要求：
 1. 先 clone 仓库，不要只复制单个 SKILL.md。
-2. 运行 bash scripts/validate.sh，确认验证通过。
+2. 运行 bash scripts/validate.sh，确认验证通过，并阅读环境检查报告。
 3. 如果我是 Codex，安装到 ~/.codex/skills；如果我是 Claude Code，安装到 ~/.claude/skills。
-4. 安装后告诉我目标路径，并提醒我重启 agent 以加载新 skill。
+4. 告诉我当前环境是否具备 PDF、PPT、老 Office 文件或 OCR 处理能力；如果缺少可选工具，只说明影响，不要擅自安装。
+5. 安装后告诉我目标路径，并提醒我重启 agent 以加载新 skill。
 ```
 
 如果 agent 已经知道当前环境，也可以用更短的说法：
@@ -48,6 +49,43 @@ https://github.com/vansvoler/kol-content-review-skill
 ```text
 安装 vansvoler/kol-content-review-skill 这个 skill。请 clone 仓库，先验证，再用 scripts/install.sh 安装到当前 agent 的 skills 目录。
 ```
+
+## 文件解析能力与环境检查
+
+`scripts/validate.sh` 会检查必需运行环境，并报告可选文件处理工具是否存在。它不会自动安装系统工具。
+
+### 当前原生支持
+
+| 文件类型 | 支持情况 | 说明 |
+|---|---|---|
+| `.docx` | 支持 | 解析正文段落、标题样式和表格文本；不保留批注、修订、图片和复杂排版 |
+| `.xlsx` | 支持 | 解析工作表、共享字符串、内联字符串和空列；不计算公式结果，不保留样式 |
+| `.md` / `.txt` | 支持 | 直接读取文本 |
+
+### 依赖环境或暂不支持
+
+| 文件类型 | 当前处理方式 | 需要的环境 |
+|---|---|---|
+| `.pdf` | 脚本不解析；由 agent 原生读取，或先转成文本/markdown | 可选：`pdftotext`；扫描件需要 OCR |
+| `.pptx` | 暂不原生解析 | 可选：`libreoffice` / `soffice` 转换后再审 |
+| `.doc` / `.xls` / `.ppt` | 暂不原生解析 | 可选：`libreoffice` / `soffice` 转换为新格式或文本 |
+| 图片、截图、扫描件 | 暂不原生 OCR | 可选：`tesseract` 或 agent 图片理解能力 |
+
+### 必需环境
+
+- `bash`
+- `python3 >= 3.9`
+- Python 标准库：`zipfile`、`xml.etree.ElementTree`
+
+### 可选增强工具
+
+这些工具不是安装 skill 的必要条件，但会影响复杂文件的处理能力：
+
+- `git`：从 GitHub clone 仓库
+- `libreoffice` / `soffice`：转换老 Office 文件、PPT/PPTX
+- `pdftotext`：把可复制文本 PDF 转成文本
+- `tesseract`：对扫描件、图片、截图做 OCR
+- `pandoc`：通用文档格式转换
 
 ## 手动安装
 
@@ -154,6 +192,8 @@ bash scripts/validate.sh
 
 验证内容：
 
+- 必需环境存在：`bash`、`python3 >= 3.9`
+- 可选工具报告：`git`、`libreoffice`、`soffice`、`pdftotext`、`tesseract`、`pandoc`
 - 必需文件存在
 - `SKILL.md` frontmatter 可解析
 - Python 解析脚本可编译
@@ -165,8 +205,8 @@ bash scripts/validate.sh
 
 ## 运行要求
 
-- macOS / Linux shell
+- macOS / Linux shell，使用 `bash`
 - Python 3.9+
 - 无额外 pip 依赖
 
-PDF 稿件不通过 `scripts/parse_draft.py` 解析，应由当前 agent 环境直接读取，或先转成 markdown/text 后再审核。
+PDF、PPT、老 Office 文件和扫描件不通过 `scripts/parse_draft.py` 原生解析，应由当前 agent 环境直接读取，或先用可选工具转换成 markdown/text 后再审核。

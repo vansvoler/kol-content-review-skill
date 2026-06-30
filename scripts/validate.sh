@@ -14,6 +14,26 @@ log() {
   echo "$*" | tee -a "$LOG_FILE"
 }
 
+require_command() {
+  local command_name="$1"
+
+  if ! command -v "$command_name" >/dev/null 2>&1; then
+    log "缺少必需命令: ${command_name}"
+    exit 1
+  fi
+}
+
+report_optional_command() {
+  local command_name="$1"
+  local purpose="$2"
+
+  if command -v "$command_name" >/dev/null 2>&1; then
+    log "可选工具可用: ${command_name}（${purpose}）"
+  else
+    log "可选工具缺失: ${command_name}（${purpose}）"
+  fi
+}
+
 require_file() {
   if [[ ! -f "$REPO_ROOT/$1" ]]; then
     log "缺少文件: $1"
@@ -31,6 +51,31 @@ assert_contains() {
     exit 1
   fi
 }
+
+log "== 检查运行环境 =="
+log "bash: ${BASH_VERSION}"
+require_command "python3"
+python_report="$(python3 - <<'PY'
+import sys
+import zipfile
+import xml.etree.ElementTree as ET
+
+version = sys.version_info
+print(f"python3: {version.major}.{version.minor}.{version.micro}")
+if version < (3, 9):
+    raise SystemExit("Python 版本过低，需要 Python 3.9+")
+print("python stdlib: zipfile/xml.etree.ElementTree ok")
+PY
+)"
+log "$python_report"
+
+log "== 检查可选文件处理工具 =="
+report_optional_command "git" "从 GitHub clone 仓库"
+report_optional_command "libreoffice" "转换 .doc/.xls/.ppt/.pptx 等 Office 文件"
+report_optional_command "soffice" "LibreOffice 命令行入口，部分系统使用该命令"
+report_optional_command "pdftotext" "将可复制文本 PDF 转为文本"
+report_optional_command "tesseract" "扫描件、图片、截图 OCR"
+report_optional_command "pandoc" "通用文档格式转换"
 
 log "== 检查必需文件 =="
 require_file "SKILL.md"
