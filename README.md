@@ -38,17 +38,35 @@ https://github.com/vansvoler/kol-content-review-skill
 
 要求：
 1. 先 clone 仓库，不要只复制单个 SKILL.md。
-2. 运行 bash scripts/validate.sh，确认验证通过，并阅读环境检查报告。
-3. 如果我是 Codex，安装到 ~/.codex/skills；如果我是 Claude Code，安装到 ~/.claude/skills。
-4. 告诉我当前环境是否具备 PDF、PPT、老 Office 文件或 OCR 处理能力；如果缺少可选工具，只说明影响，不要擅自安装。
+2. 运行 bash scripts/setup.sh --target codex --no-system-tools 完成安装。
+3. 不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
+4. 告诉我当前环境是否具备 PDF、PPT、老 Office 文件或 OCR 处理能力；如果缺少可选工具，只说明影响。
 5. 安装后告诉我目标路径，并提醒我重启 agent 以加载新 skill。
 ```
 
 如果 agent 已经知道当前环境，也可以用更短的说法：
 
 ```text
-安装 vansvoler/kol-content-review-skill 这个 skill。请 clone 仓库，先验证，再用 scripts/install.sh 安装到当前 agent 的 skills 目录。
+安装 vansvoler/kol-content-review-skill 这个 skill。请 clone 仓库，然后运行 scripts/setup.sh 安装到当前 agent 的 skills 目录。不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
 ```
+
+## 给同事的一键安装命令
+
+Codex 用户复制下面三行到终端执行：
+
+```bash
+git clone https://github.com/vansvoler/kol-content-review-skill.git
+cd kol-content-review-skill
+bash scripts/setup.sh --target codex --no-system-tools
+```
+
+Claude Code 用户把最后一行换成：
+
+```bash
+bash scripts/setup.sh --target claude --no-system-tools
+```
+
+这个安装流程只安装 skill 本身，不会安装 Homebrew、Xcode Command Line Tools、LibreOffice、PDF/OCR 工具。安装完成后需要重启 Codex / Claude Code。
 
 ## 文件解析能力与环境检查
 
@@ -88,6 +106,8 @@ https://github.com/vansvoler/kol-content-review-skill
 - `pandoc`：通用文档格式转换
 
 ## 手动安装
+
+如果你想分步执行，可以先验证再安装：
 
 ```bash
 git clone https://github.com/vansvoler/kol-content-review-skill.git

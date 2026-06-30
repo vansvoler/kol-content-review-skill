@@ -85,6 +85,13 @@ require_file "references/compliance-words.md"
 require_file "references/platform-rules.md"
 require_file "references/review-standards.md"
 require_file "scripts/parse_draft.py"
+require_file "scripts/setup.sh"
+require_file "scripts/install.sh"
+
+log "== 检查安装脚本帮助信息 =="
+setup_help="$(bash "$REPO_ROOT/scripts/setup.sh" --help)"
+assert_contains "$setup_help" "--target" "setup.sh help"
+assert_contains "$setup_help" "--no-system-tools" "setup.sh help"
 
 log "== 检查 SKILL.md frontmatter =="
 python3 - "$REPO_ROOT/SKILL.md" >> "$LOG_FILE" <<'PY'
