@@ -3,9 +3,9 @@
 稿件格式统一解析器
 
 将达人交付的稿件（docx/xlsx/md/txt）统一转换为 markdown，
-输出到 stdout，供 Claude 进行审稿处理。
+输出到 stdout，供 agent 进行审稿处理。
 
-PDF 文件请直接用 Claude Read tool 原生读取，本脚本不做 PDF 解析。
+PDF 文件请使用当前 agent 环境可用的 PDF 读取能力，本脚本不做 PDF 解析。
 
 用法:
     python3 parse_draft.py <文件路径>
@@ -32,15 +32,24 @@ S = f"{{{S_NS}}}"
 # docx 解析
 # ═══════════════════════════════════════════════════════════
 def parse_docx(path: Path) -> str:
-    """docx → markdown。标题样式映射为 #，其余为纯文本段落。"""
+    """docx → markdown。保留段落和表格在正文中的原始顺序。"""
     with zipfile.ZipFile(path) as z:
         xml_data = z.read("word/document.xml")
     root = ET.fromstring(xml_data)
     body = root.find(f"{W}body")
     if body is None:
         return ""
-    lines = [_render_paragraph(p) for p in body.findall(f"{W}p")]
-    return "\n\n".join(line for line in lines if line)
+    blocks = [_render_docx_block(child) for child in body]
+    return "\n\n".join(block for block in blocks if block)
+
+
+def _render_docx_block(elem) -> str:
+    """Word body 子节点 → markdown 块。"""
+    if elem.tag == f"{W}p":
+        return _render_paragraph(elem)
+    if elem.tag == f"{W}tbl":
+        return _render_docx_table(elem)
+    return ""
 
 
 def _render_paragraph(p) -> str:
@@ -63,6 +72,24 @@ def _get_pstyle(p) -> str:
         return ""
     p_style = p_pr.find(f"{W}pStyle")
     return p_style.get(f"{W}val", "") if p_style is not None else ""
+
+
+def _render_docx_table(tbl) -> str:
+    """Word 表格 → markdown 表格。"""
+    rows = [_render_docx_table_row(row) for row in tbl.findall(f"{W}tr")]
+    rows = [row for row in rows if any(cell.strip() for cell in row)]
+    return _rows_to_md_table(rows) if rows else ""
+
+
+def _render_docx_table_row(row) -> list:
+    """Word 表格行 → [单元格文本, ...]。"""
+    return [_render_docx_table_cell(cell) for cell in row.findall(f"{W}tc")]
+
+
+def _render_docx_table_cell(cell) -> str:
+    """Word 表格单元格 → 文本，单元格内多段用换行连接。"""
+    paragraphs = [_render_paragraph(p) for p in cell.findall(f"{W}p")]
+    return "\n".join(p for p in paragraphs if p)
 
 
 # ═══════════════════════════════════════════════════════════
@@ -122,7 +149,28 @@ def _render_sheet(z, sheet_path: str, name: str, shared: list) -> str:
 
 def _render_row(row, shared: list) -> list:
     """单行 → [单元格文本, ...]"""
-    return [_cell_value(c, shared) for c in row.findall(f"{S}c")]
+    values = []
+    for cell in row.findall(f"{S}c"):
+        index = _cell_column_index(cell)
+        if index is None:
+            values.append(_cell_value(cell, shared))
+            continue
+        while len(values) < index:
+            values.append("")
+        values[index - 1] = _cell_value(cell, shared)
+    return values
+
+
+def _cell_column_index(cell) -> int | None:
+    """从 A1/C12 这类单元格地址提取 1-based 列号。"""
+    ref = cell.get("r", "")
+    letters = "".join(ch for ch in ref if ch.isalpha())
+    if not letters:
+        return None
+    index = 0
+    for letter in letters.upper():
+        index = index * 26 + ord(letter) - ord("A") + 1
+    return index
 
 
 def _cell_value(c, shared: list) -> str:
@@ -172,7 +220,7 @@ def parse(path: Path) -> str:
         return _pdf_hint(path)
     raise ValueError(
         f"不支持的格式: {ext}"
-        f"（支持 .docx/.xlsx/.md/.txt；PDF 请用 Claude Read tool 原生读取）"
+        f"（支持 .docx/.xlsx/.md/.txt；PDF 请用当前环境的 PDF 读取能力处理）"
     )
 
 
@@ -180,7 +228,7 @@ def _pdf_hint(path: Path) -> str:
     """PDF 文件提示信息。"""
     return (
         f"# PDF 文件\n\n"
-        f"本脚本不处理 PDF 解析。请调用 Claude Read tool 直接读取:\n"
+        f"本脚本不处理 PDF 解析。请使用当前 agent 环境的 PDF 读取能力处理:\n"
         f"  {path.resolve()}\n"
     )
 

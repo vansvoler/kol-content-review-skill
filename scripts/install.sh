@@ -1,10 +1,6 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# ============================================================
-# 安装 KOL 审稿 skill 到本机 agent skill 目录
-# ============================================================
-
 SKILL_NAME="kol-content-review"
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 REPO_ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
@@ -14,14 +10,16 @@ target_dir=""
 usage() {
   cat <<'USAGE'
 用法:
-  bash scripts/install.sh --target claude
+  bash scripts/install.sh --target codex
   bash scripts/install.sh --target agents
-  bash scripts/install.sh --target-dir "$HOME/.claude/skills"
+  bash scripts/install.sh --target claude
+  bash scripts/install.sh --target-dir "$HOME/.codex/skills"
 
 参数:
-  --target claude    安装到 ~/.claude/skills
-  --target agents    安装到 ~/.agents/skills
-  --target-dir DIR   安装到指定 skills 根目录
+  --target codex    安装到 ~/.codex/skills
+  --target agents   安装到 ~/.agents/skills
+  --target claude   安装到 ~/.claude/skills
+  --target-dir DIR  安装到指定 skills 根目录
 USAGE
 }
 
@@ -29,8 +27,9 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --target)
       case "${2:-}" in
+        codex) target_dir="$HOME/.codex/skills" ;;
+        agents) target_dir="$HOME/.agents/skills" ;;
         claude) target_dir="$HOME/.claude/skills" ;;
-        agents|codex) target_dir="$HOME/.agents/skills" ;;
         *)
           echo "未知 target: ${2:-}" >&2
           usage
@@ -79,5 +78,4 @@ cp -R \
   "$destination/"
 
 echo "安装完成: $destination"
-echo "建议验证: test -f \"$destination/SKILL.md\""
-
+echo "建议验证: bash \"$destination/scripts/validate.sh\""

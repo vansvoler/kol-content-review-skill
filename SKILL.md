@@ -32,8 +32,8 @@ description: Use when reviewing KOL or influencer deliverables against a brief, 
 | 扩展名 | 处理方式 |
 |---|---|
 | `.docx` / `.xlsx` | 调用 `scripts/parse_draft.py <file>` 转 markdown |
-| `.pdf` | **直接用 Read tool 原生读取**（Claude 原生支持 PDF） |
-| `.md` / `.txt` | 用 Read tool 读取 |
+| `.pdf` | 使用当前 agent 环境可用的 PDF 读取能力；若无法直接读取，先转为 markdown/text |
+| `.md` / `.txt` | 使用当前 agent 环境的文件读取能力读取 |
 
 解析脚本用法：
 ```bash
