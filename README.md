@@ -6,7 +6,8 @@ KOL / 达人稿件审核与批注 skill，用于帮助品牌、内容和媒介�
 
 ## 它能做什么
 
-- **解析稿件**：支持 `.docx`、`.xlsx`、`.md`、`.txt`；PDF 由当前 agent 环境读取或先转成文本。
+- **读取稿件**：依赖当前 agent 自身的文件读取能力，支持它能读取的 Word、Excel、PDF、PPT、图片、markdown、文本或用户粘贴内容。
+- **整理工作稿**：先把稿件整理成统一 markdown 工作稿，再开始审核，避免边读边改导致漏看。
 - **对照 brief 审核**：检查必传卖点、产品事实、价格/规格/成分、品牌口径是否一致。
 - **识别合规风险**：按广告法、平台规则和行业敏感词判断红线问题。
 - **分层输出意见**：用 `[必改] / [建议] / [参考]` 区分修改强度，避免把所有问题都写成强制修改。
@@ -28,28 +29,18 @@ KOL / 达人稿件审核与批注 skill，用于帮助品牌、内容和媒介�
 - 需要法律最终意见的高风险广告审查
 - 需要自动发布、自动联系达人或自动修改原文件的工作流
 
-## 文件解析能力
+## 文件读取原则
 
-### 当前原生支持
+这个 skill 不内置文件解析脚本，默认依赖 agent 自身能力读取文件。
 
-| 文件类型 | 支持情况 | 说明 |
-|---|---|---|
-| `.docx` | 支持 | 解析正文段落、标题样式和表格文本；不保留批注、修订、图片和复杂排版 |
-| `.xlsx` | 支持 | 解析工作表、共享字符串、内联字符串和空列；不计算公式结果，不保留样式 |
-| `.md` / `.txt` | 支持 | 直接读取文本 |
-
-### 依赖环境或暂不支持
-
-| 文件类型 | 当前处理方式 | 需要的环境 |
-|---|---|---|
-| `.pdf` | 脚本不解析；由 agent 原生读取，或先转成文本/markdown | 可选：`pdftotext`；扫描件需要 OCR |
-| `.pptx` | 暂不原生解析 | 可选：`libreoffice` / `soffice` 转换后再审 |
-| `.doc` / `.xls` / `.ppt` | 暂不原生解析 | 可选：`libreoffice` / `soffice` 转换为新格式或文本 |
-| 图片、截图、扫描件 | 暂不原生 OCR | 可选：`tesseract` 或 agent 图片理解能力 |
+- agent 能读取的文件：直接读取并整理成 markdown 工作稿。
+- agent 读不清的文件：先要求用户重新上传、截图补充，或导出为 `.md` / `.txt` / 可复制文本。
+- 多文件交付：先列出文件清单，并标注每个文件是 brief、稿件、参考素材还是不确定。
+- 表格、分镜、截图、PDF：必须保留可见文字和结构关系；无法确认的视觉信息要明确标注“无法确认”，不能猜。
 
 ## 使用方式
 
-在 agent 中直接描述审稿任务，并同时提供 brief 和稿件路径：
+在 agent 中直接描述审稿任务，并同时提供 brief 和稿件：
 
 ```text
 帮我审核这篇小红书达人稿。
@@ -60,14 +51,14 @@ Brief：
 - 必传卖点：神经酰胺、屏障修护、敏感肌可用
 - 禁忌：不要写治疗、消炎、立竿见影
 
-稿件路径：
-/path/to/draft.docx
+稿件：
+见我上传的达人稿文件。
 ```
 
-也可以直接给文件：
+也可以直接给文件路径或附件：
 
 ```text
-请对照 /path/to/brief.md 审核 /path/to/script.xlsx。
+请对照 brief 文件审核这个短视频脚本。
 平台是抖音，内容形式是短视频脚本。
 ```
 
@@ -98,61 +89,37 @@ Brief：
 - 平台合规检查
 - 给达人的沟通要点
 
-## 让 agent 自动安装
-
-把下面这段发给 Codex、Claude Code 或其他支持 skills 的 agent：
-
-```text
-请帮我安装这个 skill：
-https://github.com/vansvoler/kol-content-review-skill
-
-要求：
-1. 先 clone 仓库，不要只复制单个 SKILL.md。
-2. 运行 bash scripts/setup.sh --target codex --no-system-tools 完成安装。
-3. 不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
-4. 告诉我当前环境是否具备 PDF、PPT、老 Office 文件或 OCR 处理能力；如果缺少可选工具，只说明影响。
-5. 安装后告诉我目标路径，并提醒我重启 agent 以加载新 skill。
-```
-
-如果 agent 已经知道当前环境，也可以用更短的说法：
-
-```text
-安装 vansvoler/kol-content-review-skill 这个 skill。请 clone 仓库，然后运行 scripts/setup.sh 安装到当前 agent 的 skills 目录。不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
-```
-
-## 环境检查
-
-`scripts/validate.sh` 会检查必需运行环境，并报告可选文件处理工具是否存在。它不会自动安装系统工具。
-
-必需环境：
-
-- `bash`
-- `python3 >= 3.9`
-- Python 标准库：`zipfile`、`xml.etree.ElementTree`
-
-可选增强工具：
-
-- `git`：从 GitHub clone 仓库
-- `libreoffice` / `soffice`：转换老 Office 文件、PPT/PPTX
-- `pdftotext`：把可复制文本 PDF 转成文本
-- `tesseract`：对扫描件、图片、截图做 OCR
-- `pandoc`：通用文档格式转换
-
 ## 文件结构
 
+压缩包内保持这个结构即可：
+
 ```text
-.
+kol-content-review/
 ├── SKILL.md
+├── README.md
 ├── assets/
 │   └── review-report-template.md
-├── references/
-│   ├── annotation-guide.md
-│   ├── compliance-words.md
-│   ├── platform-rules.md
-│   └── review-standards.md
-└── scripts/
-    ├── install.sh
-    ├── parse_draft.py
-    ├── setup.sh
-    └── validate.sh
+└── references/
+    ├── annotation-guide.md
+    ├── compliance-words.md
+    ├── platform-rules.md
+    └── review-standards.md
 ```
+
+## 通过压缩包分享
+
+把整个 `kol-content-review/` 文件夹压缩成 zip 后发给同事。同事不需要理解里面的文件，只要把 zip 交给 agent 安装。
+
+可以把下面这段发给 Codex、Claude Code 或其他支持 skills 的 agent：
+
+```text
+请帮我安装这个 skill 压缩包。
+
+要求：
+1. 解压后确认根目录里有 SKILL.md。
+2. 保留整个 kol-content-review 文件夹，不要只复制 SKILL.md。
+3. 安装到当前 agent 的 skills 目录。
+4. 安装后告诉我目标路径，并提醒我重启 agent 以加载新 skill。
+```
+
+如果 agent 要求手动选择目录，选择当前 agent 的 skills 目录即可。

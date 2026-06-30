@@ -1,6 +1,6 @@
 ---
 name: kol-content-review
-description: Use when reviewing KOL or influencer deliverables against a brief, especially 小红书笔记审核, 达人稿件, 审稿, 短视频脚本审核, 广告稿件审核, or 稿件批注 for docx, xlsx, pdf, md, or txt drafts.
+description: Use when reviewing KOL or influencer deliverables against a brief, especially 小红书笔记审核, 达人稿件, 审稿, 短视频脚本审核, 广告稿件审核, or 稿件批注 across document, spreadsheet, PDF, slide, image, markdown, or text drafts.
 ---
 
 # KOL 稿件审核
@@ -21,26 +21,23 @@ description: Use when reviewing KOL or influencer deliverables against a brief, 
 
 确认用户已提供：
 1. **Brief**：文字描述 / markdown 文件 / 产品素材
-2. **稿件**：docx / xlsx / pdf / md / txt 任一格式
+2. **稿件**：当前 agent 可读取的文件、截图、链接、markdown/text，或用户粘贴的正文
 
 若 brief 缺失，**必须先询问用户**，不得凭空审核。
 
-### Step 2 · 解析稿件
+### Step 2 · 读取稿件 + 建立工作稿
 
-按文件格式分派：
+使用当前 agent 环境可用的文件读取能力处理稿件，不调用额外解析脚本。
 
-| 扩展名 | 处理方式 |
-|---|---|
-| `.docx` / `.xlsx` | 调用 `scripts/parse_draft.py <file>` 转 markdown |
-| `.pdf` | 使用当前 agent 环境可用的 PDF 读取能力；若无法直接读取，先转为 markdown/text |
-| `.md` / `.txt` | 使用当前 agent 环境的文件读取能力读取 |
+读取后先整理为**统一 markdown 工作稿**，用于后续批注：
 
-解析脚本用法：
-```bash
-python3 scripts/parse_draft.py <稿件文件路径>
-```
+- 图文稿：保留标题、正文、话题标签、图片说明
+- 短视频脚本：保留分镜、画面、口播、字幕、备注
+- 表格稿件：保留表头、行列关系和单元格文本
+- PDF / 图片 / 截图：尽量提取可见文字，并标注无法确认的图片信息
+- 多文件交付：先列出文件清单，再说明每个文件被识别为 brief / 稿件 / 参考素材 / 不确定
 
-输出为 stdout 的 markdown。
+若当前 agent 无法读取某个文件，停止审核并要求用户改为上传可读取版本，或导出为 `.md` / `.txt` / 可复制文本。不凭空猜测文件内容。
 
 ### Step 3 · 识别内容类型 + 加载规则
 
@@ -151,7 +148,6 @@ python3 scripts/parse_draft.py <稿件文件路径>
 
 ## 资源地图
 
-- `scripts/parse_draft.py` — docx/xlsx → markdown 统一解析器
 - `references/review-standards.md` — 三层标准 + 四条铁律 + 边界场景
 - `references/platform-rules.md` — 小红书/抖音/视频号/B 站/快手分段
 - `references/compliance-words.md` — 违禁词黑/灰/误区三级词库
