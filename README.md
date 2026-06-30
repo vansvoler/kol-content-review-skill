@@ -28,49 +28,7 @@ KOL / 达人稿件审核与批注 skill，用于帮助品牌、内容和媒介�
 - 需要法律最终意见的高风险广告审查
 - 需要自动发布、自动联系达人或自动修改原文件的工作流
 
-## 让 agent 自动安装
-
-把下面这段发给 Codex、Claude Code 或其他支持 skills 的 agent：
-
-```text
-请帮我安装这个 skill：
-https://github.com/vansvoler/kol-content-review-skill
-
-要求：
-1. 先 clone 仓库，不要只复制单个 SKILL.md。
-2. 运行 bash scripts/setup.sh --target codex --no-system-tools 完成安装。
-3. 不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
-4. 告诉我当前环境是否具备 PDF、PPT、老 Office 文件或 OCR 处理能力；如果缺少可选工具，只说明影响。
-5. 安装后告诉我目标路径，并提醒我重启 agent 以加载新 skill。
-```
-
-如果 agent 已经知道当前环境，也可以用更短的说法：
-
-```text
-安装 vansvoler/kol-content-review-skill 这个 skill。请 clone 仓库，然后运行 scripts/setup.sh 安装到当前 agent 的 skills 目录。不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
-```
-
-## 给同事的一键安装命令
-
-Codex 用户复制下面三行到终端执行：
-
-```bash
-git clone https://github.com/vansvoler/kol-content-review-skill.git
-cd kol-content-review-skill
-bash scripts/setup.sh --target codex --no-system-tools
-```
-
-Claude Code 用户把最后一行换成：
-
-```bash
-bash scripts/setup.sh --target claude --no-system-tools
-```
-
-这个安装流程只安装 skill 本身，不会安装 Homebrew、Xcode Command Line Tools、LibreOffice、PDF/OCR 工具。安装完成后需要重启 Codex / Claude Code。
-
-## 文件解析能力与环境检查
-
-`scripts/validate.sh` 会检查必需运行环境，并报告可选文件处理工具是否存在。它不会自动安装系统工具。
+## 文件解析能力
 
 ### 当前原生支持
 
@@ -88,52 +46,6 @@ bash scripts/setup.sh --target claude --no-system-tools
 | `.pptx` | 暂不原生解析 | 可选：`libreoffice` / `soffice` 转换后再审 |
 | `.doc` / `.xls` / `.ppt` | 暂不原生解析 | 可选：`libreoffice` / `soffice` 转换为新格式或文本 |
 | 图片、截图、扫描件 | 暂不原生 OCR | 可选：`tesseract` 或 agent 图片理解能力 |
-
-### 必需环境
-
-- `bash`
-- `python3 >= 3.9`
-- Python 标准库：`zipfile`、`xml.etree.ElementTree`
-
-### 可选增强工具
-
-这些工具不是安装 skill 的必要条件，但会影响复杂文件的处理能力：
-
-- `git`：从 GitHub clone 仓库
-- `libreoffice` / `soffice`：转换老 Office 文件、PPT/PPTX
-- `pdftotext`：把可复制文本 PDF 转成文本
-- `tesseract`：对扫描件、图片、截图做 OCR
-- `pandoc`：通用文档格式转换
-
-## 手动安装
-
-如果你想分步执行，可以先验证再安装：
-
-```bash
-git clone https://github.com/vansvoler/kol-content-review-skill.git
-cd kol-content-review-skill
-bash scripts/validate.sh
-```
-
-按环境选择安装目标：
-
-```bash
-# Codex
-bash scripts/install.sh --target codex
-
-# Claude Code
-bash scripts/install.sh --target claude
-
-# Agents 目录
-bash scripts/install.sh --target agents
-
-# 自定义 skills 根目录
-bash scripts/install.sh --target-dir "$HOME/.codex/skills"
-```
-
-安装脚本会把 skill 安装到目标目录下的 `kol-content-review/`。如果目标目录已存在，会先备份为 `.backup-YYYYMMDDHHMMSS`。
-
-安装完成后，重启 agent，让新 skill 生效。
 
 ## 使用方式
 
@@ -186,6 +98,24 @@ Brief：
 - 平台合规检查
 - 给达人的沟通要点
 
+## 环境检查
+
+`scripts/validate.sh` 会检查必需运行环境，并报告可选文件处理工具是否存在。它不会自动安装系统工具。
+
+必需环境：
+
+- `bash`
+- `python3 >= 3.9`
+- Python 标准库：`zipfile`、`xml.etree.ElementTree`
+
+可选增强工具：
+
+- `git`：从 GitHub clone 仓库
+- `libreoffice` / `soffice`：转换老 Office 文件、PPT/PPTX
+- `pdftotext`：把可复制文本 PDF 转成文本
+- `tesseract`：对扫描件、图片、截图做 OCR
+- `pandoc`：通用文档格式转换
+
 ## 文件结构
 
 ```text
@@ -201,32 +131,28 @@ Brief：
 └── scripts/
     ├── install.sh
     ├── parse_draft.py
+    ├── setup.sh
     └── validate.sh
 ```
 
-## 验证
+## 让 agent 自动安装
 
-```bash
-bash scripts/validate.sh
+把下面这段发给 Codex、Claude Code 或其他支持 skills 的 agent：
+
+```text
+请帮我安装这个 skill：
+https://github.com/vansvoler/kol-content-review-skill
+
+要求：
+1. 先 clone 仓库，不要只复制单个 SKILL.md。
+2. 运行 bash scripts/setup.sh --target codex --no-system-tools 完成安装。
+3. 不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
+4. 告诉我当前环境是否具备 PDF、PPT、老 Office 文件或 OCR 处理能力；如果缺少可选工具，只说明影响。
+5. 安装后告诉我目标路径，并提醒我重启 agent 以加载新 skill。
 ```
 
-验证内容：
+如果 agent 已经知道当前环境，也可以用更短的说法：
 
-- 必需环境存在：`bash`、`python3 >= 3.9`
-- 可选工具报告：`git`、`libreoffice`、`soffice`、`pdftotext`、`tesseract`、`pandoc`
-- 必需文件存在
-- `SKILL.md` frontmatter 可解析
-- Python 解析脚本可编译
-- `.md` / `.txt` / `.docx` / `.xlsx` 样例稿件可转换为 markdown
-- `.docx` 表格内容不会丢失
-- `.xlsx` 空列不会导致表格错位
-
-验证日志会写入 `logs/validate.log`。
-
-## 运行要求
-
-- macOS / Linux shell，使用 `bash`
-- Python 3.9+
-- 无额外 pip 依赖
-
-PDF、PPT、老 Office 文件和扫描件不通过 `scripts/parse_draft.py` 原生解析，应由当前 agent 环境直接读取，或先用可选工具转换成 markdown/text 后再审核。
+```text
+安装 vansvoler/kol-content-review-skill 这个 skill。请 clone 仓库，然后运行 scripts/setup.sh 安装到当前 agent 的 skills 目录。不要安装 Homebrew、Xcode Command Line Tools 或系统工具。
+```
